@@ -1,0 +1,77 @@
+version: '3'
+services:
+
+  nginx:
+    container_name: nginx
+    image: nginx:alpine
+    restart: unless-stopped
+    tty: true
+    ports:
+      - 8080:80
+      - 444:443
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/apps:/etc/nginx/conf.d
+      - ../laravel-sandbox/:/var/www/laravel-sandbox
+    networks:
+      - php_network
+  
+  php82:
+    container_name: php82
+    restart: unless-stopped
+    image: laravel_php82
+    build:
+      context: ./php82
+      dockerfile: Dockerfile
+    ports:
+      - 9000:9000
+    environment:
+      APP_ENV: local
+    volumes:
+      - ../laravel-sandbox:/var/www/laravel-sandbox
+    links:
+      - "nginx:app.laravel-sandbox.local"
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - php_network
+
+  mysql:
+    container_name: database
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: laravel
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql:/var/lib/mysql
+    networks:
+      - php_network
+
+  redis:
+    container_name: redis
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis:/data
+    networks:
+      - php_network
+
+  
+  mailpit:
+    container_name: mail
+    restart: always
+    image: 'axllent/mailpit:latest'
+    ports:
+      - '1025:1025'
+      - '8825:8025'
+    networks:
+      - php_network
+    
+
+networks:
+  php_network:
+    driver: bridge

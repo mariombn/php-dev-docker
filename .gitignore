@@ -1,0 +1,6 @@
+/mysql/*
+/redis/*
+
+# Não ignorar arquivos .gitkeep
+!/mysql/.gitkeep
+!/redis/.gitkeep
